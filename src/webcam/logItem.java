@@ -3,14 +3,8 @@ package webcam;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -40,51 +34,29 @@ import com.microsoft.azure.storage.blob.*;
 
 import java.sql.Connection;
 import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.DriverManager;
 
 @SuppressWarnings("serial")
 public class logItem {
-	// int itemID = 1000;
-
-//	public logItem() {
-//		itemID++;
-//	}
 
 	public static void main(String[] args) throws InterruptedException {
 		String itemID = UUID.randomUUID().toString();
-//		final Dimension size = WebcamResolution.WXGA2.getSize();
-//
-//		final Webcam webcam = Webcam.getDefault();
-//		webcam.setViewSize(size);
-
-		// @formatter:off
 		Dimension[] nonStandardResolutions = new Dimension[] { WebcamResolution.PAL.getSize(),
 				WebcamResolution.HD.getSize(), new Dimension(2000, 1000), new Dimension(1000, 500), };
-		// @formatter:on
 
-		// your camera have to support HD720p to run this code
 		Webcam webcam = Webcam.getWebcamByName("HD Webcam C525 1");
-		
-	
-		
+
 		webcam.setCustomViewSizes(nonStandardResolutions);
 		webcam.setViewSize(WebcamResolution.HD.getSize());
 		webcam.open();
 
 		final WebcamPanel panel = new WebcamPanel(webcam, false);
-//		panel.setFPSDisplayed(true);
-//		panel.setDisplayDebugInfo(true);
-//		panel.setImageSizeDisplayed(true);
-//		panel.setMirrored(true);
 
 		final String play = "START LOGGING";
 		final String stop = "TAKE A PICTURE";
 
 		final JButton button = new JButton();
 		button.setAction(new AbstractAction(play) {
-			// int rowKey = 100;
 			private AtomicLong idCounter2 = new AtomicLong();
 
 			@Override
@@ -129,19 +101,11 @@ public class logItem {
 		String url = String.format(
 				"jdbc:sqlserver://%s:1433;database=%s;user=%s;password=%s;encrypt=true;hostNameInCertificate=*.database.windows.net;loginTimeout=30;",
 				hostName, dbName, user, password);
-		// System.out.println(url);
 		Connection connection = null;
-
-		// jdbc:sqlserver://hackgt5.database.windows.net:1433;database=items;user=thaotrongtran@hackgt5;password={your_password_here};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
 
 		try {
 			connection = DriverManager.getConnection(url);
 			String schema = connection.getSchema();
-//			System.out.println("Successful connection - Schema: " + schema);
-//
-//			System.out.println("Query data example:");
-//			System.out.println("=========================================");
-
 			// Create and execute a SELECT SQL statement.
 			String selectSql = "INSERT INTO Items (itemID, imageID, imageurl) VALUES ('" + itemID + "', '" + imageID
 					+ "', '" + imageURL + "');";
@@ -168,8 +132,8 @@ public class logItem {
 		try {
 			connection = DriverManager.getConnection(url);
 			String schema = connection.getSchema();
-			// Create and execute a SELECT SQL statement.
-			String selectSql = "UPDATE Items SET category = '" + category + "' WHERE itemID = '" + itemID +"' AND imageID ='" + imageID +"';";
+			String selectSql = "UPDATE Items SET category = '" + category + "' WHERE itemID = '" + itemID
+					+ "' AND imageID ='" + imageID + "';";
 			System.out.println(selectSql);
 			Statement statement = connection.createStatement();
 			statement.executeUpdate(selectSql);
@@ -194,16 +158,6 @@ public class logItem {
 			storageAccount = CloudStorageAccount.parse(storageConnectionString);
 			blobClient = storageAccount.createCloudBlobClient();
 			container = blobClient.getContainerReference("images");
-
-			// Create the container if it does not exist with public access.
-//			System.out.println("Creating container: " + container.getName());
-//			container.createIfNotExists(BlobContainerPublicAccessType.CONTAINER, new BlobRequestOptions(),
-//					new OperationContext());
-
-			// Listing contents of container
-//			for (ListBlobItem blobItem : container.listBlobs()) {
-//				System.out.println("URI of blob is: " + blobItem.getUri());
-//			}
 		} catch (StorageException ex) {
 			System.out.println(String.format("Error returned from the service. Http code: %d and error code: %s",
 					ex.getHttpStatusCode(), ex.getErrorCode()));
@@ -233,7 +187,7 @@ public class logItem {
 		headers.put("Content-Type", "application/json");
 		headers.put("Prediction-Key", "a370579678664acaa717341c5c3dd3b4");
 
-		String url = "https://southcentralus.api.cognitive.microsoft.com/customvision/v2.0/Prediction/326a1b1b-49b6-46f9-8a4e-a4c11a0397dd/image";
+		String url = "https://southcentralus.api.cognitive.microsoft.com/customvision/v2.0/Prediction/326a1b1b-49b6-46f9-8a4e-a4c11a0397dd/image?iterationId=b4b7521d-616b-4dc8-b028-ad34f30c9c47";
 
 		Future<HttpResponse<JsonNode>> future = Unirest.post(url).headers(headers).body(bytes)
 				.asJsonAsync(new Callback<JsonNode>() {
@@ -255,7 +209,7 @@ public class logItem {
 								maxIndex = i;
 							}
 						}
-						if (arr.getJSONObject(maxIndex).getDouble("probability") > 0.99) {
+						if (arr.getJSONObject(maxIndex).getDouble("probability") > 0.95) {
 							res = arr.getJSONObject(maxIndex).getString("tagName");
 							System.out.println(arr.getJSONObject(maxIndex).getDouble("probability"));
 						} else {
@@ -287,26 +241,26 @@ public class logItem {
 					public void completed(HttpResponse<JsonNode> response) {
 						// Do something if the request is successful
 						System.out.println("Body of analyze color");
-						//System.out.println(response.getBody());
+						// System.out.println(response.getBody());
 						// JSONObject myObj = response.getBody().getObject();
 						String description = "";
-						
+
 						JSONObject myObj = response.getBody().getObject();
-						//System.out.println(myObj.toString());
+						// System.out.println(myObj.toString());
 						JSONArray arr = myObj.getJSONArray("regions");
-						for(int i = 0; i < arr.length(); i++) {
+						for (int i = 0; i < arr.length(); i++) {
 							JSONArray arr2 = arr.getJSONObject(i).getJSONArray("lines");
-							//System.out.println(arr2.toString());
-							for(int k = 0; k < arr2.length(); k++) {
+							// System.out.println(arr2.toString());
+							for (int k = 0; k < arr2.length(); k++) {
 								JSONArray arr3 = arr2.getJSONObject(k).getJSONArray("words");
-								//System.out.println(arr3.toString());
-								for(int j = 0; j < arr3.length(); j++) {
-									//System.out.println(arr3.getJSONObject(j).getString("text"));
+								// System.out.println(arr3.toString());
+								for (int j = 0; j < arr3.length(); j++) {
+									// System.out.println(arr3.getJSONObject(j).getString("text"));
 									description += " " + arr3.getJSONObject(j).getString("text");
 								}
 							}
 						}
-						writeSQLDescription(description,itemID, imageID);
+						writeSQLDescription(description, itemID, imageID);
 					}
 
 					public void cancelled() {
@@ -314,8 +268,7 @@ public class logItem {
 					}
 				});
 	}
-	
-	
+
 	public static void writeSQLDescription(String description, String itemID, String imageID) {
 		String hostName = "foundgt.database.windows.net";
 		String dbName = "foundgt";
@@ -332,7 +285,8 @@ public class logItem {
 			connection = DriverManager.getConnection(url);
 			String schema = connection.getSchema();
 			// Create and execute a SELECT SQL statement.
-			String selectSql = "UPDATE Items SET description = '" + description + "' WHERE itemID = '" + itemID +"' AND imageID ='" + imageID +"';";
+			String selectSql = "UPDATE Items SET description = '" + description + "' WHERE itemID = '" + itemID
+					+ "' AND imageID ='" + imageID + "';";
 			System.out.println(selectSql);
 			Statement statement = connection.createStatement();
 			statement.executeUpdate(selectSql);
@@ -340,8 +294,6 @@ public class logItem {
 			e.printStackTrace();
 		}
 	}
-	
-	
 
 	private static Rectangle getButtonBounds(Dimension size) {
 		final int x = (int) (size.width * 0.1);
