@@ -10,6 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -19,6 +20,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamPanel;
@@ -50,10 +54,21 @@ public class logItem {
 
 	public static void main(String[] args) throws InterruptedException {
 		String itemID = UUID.randomUUID().toString();
-		final Dimension size = WebcamResolution.VGA.getSize();
+//		final Dimension size = WebcamResolution.WXGA2.getSize();
+//
+//		final Webcam webcam = Webcam.getDefault();
+//		webcam.setViewSize(size);
 
-		final Webcam webcam = Webcam.getDefault();
-		webcam.setViewSize(size);
+		// @formatter:off
+		Dimension[] nonStandardResolutions = new Dimension[] { WebcamResolution.PAL.getSize(),
+				WebcamResolution.HD.getSize(), new Dimension(2000, 1000), new Dimension(1000, 500), };
+		// @formatter:on
+
+		// your camera have to support HD720p to run this code
+		Webcam webcam = Webcam.getDefault();
+		webcam.setCustomViewSizes(nonStandardResolutions);
+		webcam.setViewSize(WebcamResolution.HD.getSize());
+		webcam.open();
 
 		final WebcamPanel panel = new WebcamPanel(webcam, false);
 //		panel.setFPSDisplayed(true);
@@ -76,11 +91,10 @@ public class logItem {
 					// button.setText(play);
 					byte[] bytes = WebcamUtils.getImageBytes(webcam, "jpg");
 					Item temp = new Item(itemID, String.valueOf(idCounter2), bytes);
-					analyzeImage(temp.getBytes());
-					System.out.println(temp.getPartitionKey());
-					System.out.println(temp.getRowKey());
+					// analyzeColor(temp.getBytes());
 					String imageURL = uploadFile(temp.getBytes(), itemID.toString() + "-" + idCounter2.toString());
-					writeSQL(itemID.toString(), idCounter2.toString(), "black shoes", "shoes", imageURL);
+					writeSQL(itemID.toString(), idCounter2.toString(), imageURL);
+					analyzeImage(temp.getBytes(), itemID.toString(), idCounter2.toString());
 					idCounter2.incrementAndGet();
 				} else {
 					panel.start();
@@ -89,7 +103,7 @@ public class logItem {
 			}
 		});
 
-		button.setBounds(getButtonBounds(size));
+		button.setBounds(getButtonBounds(WebcamResolution.HD.getSize()));
 
 		panel.setLayout(null);
 		panel.add(button);
@@ -102,17 +116,16 @@ public class logItem {
 		window.setVisible(true);
 	}
 
-	public static void writeSQL(String itemID, String imageID, String description, String category, String imageURL) {
+	public static void writeSQL(String itemID, String imageID, String imageURL) {
 		String hostName = "foundgt.database.windows.net";
 		String dbName = "foundgt";
 		String user = "sqladmin@foundgt";
 		// String password = System.getenv("SQL_PASS");
 		String password = "F(+AgcD%3a^rzN72";
-		System.out.println(password);
 		String url = String.format(
 				"jdbc:sqlserver://%s:1433;database=%s;user=%s;password=%s;encrypt=true;hostNameInCertificate=*.database.windows.net;loginTimeout=30;",
 				hostName, dbName, user, password);
-		System.out.println(url);
+		// System.out.println(url);
 		Connection connection = null;
 
 		// jdbc:sqlserver://hackgt5.database.windows.net:1433;database=items;user=thaotrongtran@hackgt5;password={your_password_here};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
@@ -120,14 +133,39 @@ public class logItem {
 		try {
 			connection = DriverManager.getConnection(url);
 			String schema = connection.getSchema();
-			System.out.println("Successful connection - Schema: " + schema);
-
-			System.out.println("Query data example:");
-			System.out.println("=========================================");
+//			System.out.println("Successful connection - Schema: " + schema);
+//
+//			System.out.println("Query data example:");
+//			System.out.println("=========================================");
 
 			// Create and execute a SELECT SQL statement.
-			String selectSql = "INSERT INTO Items VALUES ('" + itemID + "', '" + imageID + "', '" + description + "', '"
-					+ category + "', '" + imageURL + "');";
+			String selectSql = "INSERT INTO Items (itemID, imageID, imageurl) VALUES ('" + itemID + "', '" + imageID
+					+ "', '" + imageURL + "');";
+			System.out.println(selectSql);
+			Statement statement = connection.createStatement();
+			statement.executeUpdate(selectSql);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void writeSQLCategory(String category, String itemID, String imageID) {
+		String hostName = "foundgt.database.windows.net";
+		String dbName = "foundgt";
+		String user = "sqladmin@foundgt";
+		// String password = System.getenv("SQL_PASS");
+		String password = "F(+AgcD%3a^rzN72";
+		String url = String.format(
+				"jdbc:sqlserver://%s:1433;database=%s;user=%s;password=%s;encrypt=true;hostNameInCertificate=*.database.windows.net;loginTimeout=30;",
+				hostName, dbName, user, password);
+		// System.out.println(url);
+		Connection connection = null;
+
+		try {
+			connection = DriverManager.getConnection(url);
+			String schema = connection.getSchema();
+			// Create and execute a SELECT SQL statement.
+			String selectSql = "UPDATE Items SET category = '" + category + "' WHERE itemID = '" + itemID +"' AND imageID ='" + imageID +"';";
 			System.out.println(selectSql);
 			Statement statement = connection.createStatement();
 			statement.executeUpdate(selectSql);
@@ -154,14 +192,14 @@ public class logItem {
 			container = blobClient.getContainerReference("images");
 
 			// Create the container if it does not exist with public access.
-			System.out.println("Creating container: " + container.getName());
-			container.createIfNotExists(BlobContainerPublicAccessType.CONTAINER, new BlobRequestOptions(),
-					new OperationContext());
+//			System.out.println("Creating container: " + container.getName());
+//			container.createIfNotExists(BlobContainerPublicAccessType.CONTAINER, new BlobRequestOptions(),
+//					new OperationContext());
 
 			// Listing contents of container
-			for (ListBlobItem blobItem : container.listBlobs()) {
-				System.out.println("URI of blob is: " + blobItem.getUri());
-			}
+//			for (ListBlobItem blobItem : container.listBlobs()) {
+//				System.out.println("URI of blob is: " + blobItem.getUri());
+//			}
 		} catch (StorageException ex) {
 			System.out.println(String.format("Error returned from the service. Http code: %d and error code: %s",
 					ex.getHttpStatusCode(), ex.getErrorCode()));
@@ -172,7 +210,6 @@ public class logItem {
 		try {
 			CloudBlockBlob blob = container.getBlockBlobReference(imageID + ".jpg");
 			blob.uploadFromByteArray(bytes, 0, bytes.length);
-			System.out.println(blob.getUri());
 			return blob.getUri().toString();
 		} catch (URISyntaxException e1) {
 			// TODO Auto-generated catch block
@@ -187,7 +224,7 @@ public class logItem {
 		return null;
 	}
 
-	public static void analyzeImage(byte[] bytes) {
+	public static void analyzeImage(byte[] bytes, String a, String b) {
 		Map<String, String> headers = new HashMap<>();
 		headers.put("Content-Type", "application/json");
 		headers.put("Prediction-Key", "a370579678664acaa717341c5c3dd3b4");
@@ -203,7 +240,51 @@ public class logItem {
 
 					public void completed(HttpResponse<JsonNode> response) {
 						// Do something if the request is successful
+						// System.out.println(response.getBody());
+						JSONObject myObj = response.getBody().getObject();
+						JSONArray arr = myObj.getJSONArray("predictions");
+						String res;
+						int maxIndex = 0;
+						for (int i = 1; i < arr.length(); i++) {
+							if (arr.getJSONObject(i).getDouble(
+									"probability") > (arr.getJSONObject(maxIndex).getDouble("probability"))) {
+								maxIndex = i;
+							}
+						}
+						if (arr.getJSONObject(maxIndex).getDouble("probability") > 0.99) {
+							res = arr.getJSONObject(maxIndex).getString("tagName");
+							System.out.println(arr.getJSONObject(maxIndex).getDouble("probability"));
+						} else {
+							res = "Unknown item";
+						}
+						writeSQLCategory(res, a, b);
+					}
+
+					public void cancelled() {
+						// Do something if the request is cancelled
+					}
+				});
+	}
+
+	public static String[] analyzeColor(byte[] bytes) {
+		Map<String, String> headers = new HashMap<>();
+		headers.put("Content-Type", "application/json");
+		headers.put("Ocp-Apim-Subscription-Key", "366063bf59be41afb6e9c29f8c0cc7fa");
+
+		String url = "https://eastus.api.cognitive.microsoft.com/vision/v2.0/analyze?visualFeatures=Color&language=en";
+		final String[] res = new String[1];
+
+		Future<HttpResponse<JsonNode>> future = Unirest.post(url).headers(headers).body(bytes)
+				.asJsonAsync(new Callback<JsonNode>() {
+
+					public void failed(UnirestException e) {
+						// Do something if the request failed
+					}
+
+					public void completed(HttpResponse<JsonNode> response) {
+						// Do something if the request is successful
 						System.out.println(response.getBody());
+						// JSONObject myObj = response.getBody().getObject();
 
 					}
 
@@ -211,7 +292,7 @@ public class logItem {
 						// Do something if the request is cancelled
 					}
 				});
-
+		return res;
 	}
 
 	private static Rectangle getButtonBounds(Dimension size) {
