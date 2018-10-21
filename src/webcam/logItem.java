@@ -3,6 +3,13 @@ package webcam;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -22,11 +29,14 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
+import com.microsoft.azure.storage.*;
+import com.microsoft.azure.storage.blob.*;
+
 @SuppressWarnings("serial")
-public class WebcamPanelWithSubcomponentsExample {
+public class logItem {
+
 
 	public static void main(String[] args) throws InterruptedException {
-
 		final Dimension size = WebcamResolution.VGA.getSize();
 
 		final Webcam webcam = Webcam.getDefault();
@@ -43,7 +53,6 @@ public class WebcamPanelWithSubcomponentsExample {
 
 		final JButton button = new JButton();
 		button.setAction(new AbstractAction(play) {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (panel.isStarted()) {
@@ -51,6 +60,7 @@ public class WebcamPanelWithSubcomponentsExample {
 					button.setText(play);
 					byte[] bytes = WebcamUtils.getImageBytes(webcam, "jpg");
 					analyzeImage(bytes);
+					uploadFile(bytes);
 				} else {
 					panel.start();
 					button.setText(stop);
@@ -69,6 +79,56 @@ public class WebcamPanelWithSubcomponentsExample {
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		window.pack();
 		window.setVisible(true);
+	}
+
+	public static void uploadFile(byte[] bytes) {
+		File sourceFile = null, downloadedFile = null;
+
+		CloudStorageAccount storageAccount;
+		CloudBlobClient blobClient = null;
+		CloudBlobContainer container = null;
+		// Login key credential
+		final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=lostitems;"
+				+ "AccountKey=13Do7zNke4OsZzsiegA+ERz9AxJtCFaa60+WTi2TtwZTUm"
+				+ "jLk8FTMI6zcN3A4L9RJQtmoednr3Iv7fHanOvXUw==;EndpointSuffix=core.windows.net";
+
+		try {
+			// Parse the connection string and create a blob client to interact with Blob
+			// storage
+			storageAccount = CloudStorageAccount.parse(storageConnectionString);
+			blobClient = storageAccount.createCloudBlobClient();
+			container = blobClient.getContainerReference("images");
+
+			// Create the container if it does not exist with public access.
+			System.out.println("Creating container: " + container.getName());
+			container.createIfNotExists(BlobContainerPublicAccessType.CONTAINER, new BlobRequestOptions(),
+					new OperationContext());
+
+			// Listing contents of container
+			for (ListBlobItem blobItem : container.listBlobs()) {
+				System.out.println("URI of blob is: " + blobItem.getUri());
+			}
+		} catch (StorageException ex) {
+			System.out.println(String.format("Error returned from the service. Http code: %d and error code: %s",
+					ex.getHttpStatusCode(), ex.getErrorCode()));
+		} catch (Exception ex) {
+			System.out.println(ex.getMessage());
+		}
+		
+		try {
+			CloudBlockBlob blob = container.getBlockBlobReference("Thao.jpg");
+			blob.uploadFromByteArray(bytes, 0, bytes.length);
+			System.out.println(blob.getUri());
+		} catch (URISyntaxException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (StorageException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 	}
 
 	public static void analyzeImage(byte[] bytes) {
