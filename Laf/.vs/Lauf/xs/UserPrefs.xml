@@ -1,0 +1,52 @@
+﻿<Properties StartupConfiguration="{8CB3374F-1B61-44C2-B4A5-7CDFEAA70A2C}|Default">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Lauf/Views/Shared/Error.cshtml">
+    <Files>
+      <File FileName="Lauf/Views/Home/Index.cshtml" Line="9" Column="15" />
+      <File FileName="Lauf/wwwroot/css/site.css" Line="29" Column="7" />
+      <File FileName="Lauf/Controllers/HomeController.cs" Line="44" Column="12" />
+      <File FileName="Lauf/Views/Shared/_Layout.cshtml" Line="23" Column="56" />
+      <File FileName="Lauf/Views/Home/About.cshtml" Line="6" Column="100" />
+      <File FileName="Lauf/wwwroot/lib/bootstrap/dist/css/bootstrap.css" Line="5509" Column="24" />
+      <File FileName="Lauf/Controllers/Results.cs" Line="15" Column="27" />
+      <File FileName="Lauf/Views/Shared/_CookieConsentPartial.cshtml" Line="21" Column="30" />
+      <File FileName="Lauf/Views/Shared/Error.cshtml" Line="1" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="Lauf" expanded="True">
+            <Node name="Lauf" expanded="True">
+              <Node name="Controllers" expanded="True" />
+              <Node name="Models" expanded="True" />
+              <Node name="Views" expanded="True">
+                <Node name="Home" expanded="True" />
+                <Node name="Shared" expanded="True">
+                  <Node name="Error.cshtml" selected="True" />
+                </Node>
+              </Node>
+              <Node name="wwwroot" expanded="True">
+                <Node name="css" expanded="True" />
+                <Node name="images" expanded="True" />
+                <Node name="js" expanded="True" />
+                <Node name="lib" expanded="True">
+                  <Node name="bootstrap" expanded="True">
+                    <Node name="dist" expanded="True">
+                      <Node name="css" expanded="True" />
+                    </Node>
+                  </Node>
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.ItemProperties.Lauf PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MultiItemStartupConfigurations />
+</Properties>
