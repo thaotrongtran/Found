@@ -43,8 +43,11 @@ public class logItem {
 		String itemID = UUID.randomUUID().toString();
 		Dimension[] nonStandardResolutions = new Dimension[] { WebcamResolution.PAL.getSize(),
 				WebcamResolution.HD.getSize(), new Dimension(2000, 1000), new Dimension(1000, 500), };
-
-		Webcam webcam = Webcam.getWebcamByName("HD Webcam C525 1");
+		for(Webcam webcam: Webcam.getWebcams()) {
+			System.out.println(webcam.getName());
+		}
+		
+		Webcam webcam = Webcam.getWebcamByName("Logitech HD Webcam C525 1");
 
 		webcam.setCustomViewSizes(nonStandardResolutions);
 		webcam.setViewSize(WebcamResolution.HD.getSize());
@@ -187,7 +190,7 @@ public class logItem {
 		headers.put("Content-Type", "application/json");
 		headers.put("Prediction-Key", "a370579678664acaa717341c5c3dd3b4");
 
-		String url = "https://southcentralus.api.cognitive.microsoft.com/customvision/v2.0/Prediction/326a1b1b-49b6-46f9-8a4e-a4c11a0397dd/image?iterationId=b4b7521d-616b-4dc8-b028-ad34f30c9c47";
+		String url = "https://southcentralus.api.cognitive.microsoft.com/customvision/v2.0/Prediction/326a1b1b-49b6-46f9-8a4e-a4c11a0397dd/image?iterationId=06dcf29f-3d8e-4b39-b1eb-d6cd0f9e9aef";
 
 		Future<HttpResponse<JsonNode>> future = Unirest.post(url).headers(headers).body(bytes)
 				.asJsonAsync(new Callback<JsonNode>() {
