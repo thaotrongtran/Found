@@ -12,7 +12,9 @@ import java.io.Writer;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
@@ -34,9 +36,16 @@ import com.microsoft.azure.storage.blob.*;
 
 @SuppressWarnings("serial")
 public class logItem {
-
+	//int itemID = 1000;
+	
+//	public logItem() {
+//		itemID++;
+//	}
+	
+	
 
 	public static void main(String[] args) throws InterruptedException {
+		String itemID = UUID.randomUUID().toString();
 		final Dimension size = WebcamResolution.VGA.getSize();
 
 		final Webcam webcam = Webcam.getDefault();
@@ -53,14 +62,20 @@ public class logItem {
 
 		final JButton button = new JButton();
 		button.setAction(new AbstractAction(play) {
+			//int rowKey = 100;
+			private AtomicLong idCounter2 = new AtomicLong();
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (panel.isStarted()) {
-					panel.stop();
-					button.setText(play);
+					//panel.stop();
+					//button.setText(play);
 					byte[] bytes = WebcamUtils.getImageBytes(webcam, "jpg");
-					analyzeImage(bytes);
-					uploadFile(bytes);
+					Item temp = new Item(itemID, String.valueOf(idCounter2), bytes);
+					analyzeImage(temp.getBytes());
+					System.out.println(temp.getPartitionKey());
+					System.out.println(temp.getRowKey());
+					idCounter2.incrementAndGet();
+					//uploadFile(temp.getBytes());
 				} else {
 					panel.start();
 					button.setText(stop);
@@ -80,9 +95,13 @@ public class logItem {
 		window.pack();
 		window.setVisible(true);
 	}
+	
+	
+	public static void writeSQL() {
+		
+	}
 
 	public static void uploadFile(byte[] bytes) {
-		File sourceFile = null, downloadedFile = null;
 
 		CloudStorageAccount storageAccount;
 		CloudBlobClient blobClient = null;
@@ -164,5 +183,28 @@ public class logItem {
 		final int w = (int) (size.width * 0.8);
 		final int h = (int) (size.height * 0.1);
 		return new Rectangle(x, y, w, h);
+	}
+}
+
+class Item {
+	private String partitionKey, rowKey;
+	private byte[] bytes;
+	
+	public Item(String partitionKey, String rowKey, byte[] bytes) {
+		this.partitionKey = partitionKey;
+		this.rowKey = rowKey;
+		this.bytes = bytes;
+	}
+	
+	public byte[] getBytes() {
+		return bytes;
+	}
+	
+	public String getPartitionKey() {
+		return partitionKey;
+	}
+	
+	public String getRowKey() {
+		return rowKey;
 	}
 }
