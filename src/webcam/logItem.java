@@ -65,7 +65,10 @@ public class logItem {
 		// @formatter:on
 
 		// your camera have to support HD720p to run this code
-		Webcam webcam = Webcam.getDefault();
+		Webcam webcam = Webcam.getWebcamByName("HD Webcam C525 1");
+		
+	
+		
 		webcam.setCustomViewSizes(nonStandardResolutions);
 		webcam.setViewSize(WebcamResolution.HD.getSize());
 		webcam.open();
@@ -76,8 +79,8 @@ public class logItem {
 //		panel.setImageSizeDisplayed(true);
 //		panel.setMirrored(true);
 
-		final String play = "PLAY";
-		final String stop = "STOP";
+		final String play = "START LOGGING";
+		final String stop = "TAKE A PICTURE";
 
 		final JButton button = new JButton();
 		button.setAction(new AbstractAction(play) {
@@ -289,26 +292,21 @@ public class logItem {
 						String description = "";
 						
 						JSONObject myObj = response.getBody().getObject();
-						System.out.println(myObj.toString());
+						//System.out.println(myObj.toString());
 						JSONArray arr = myObj.getJSONArray("regions");
 						for(int i = 0; i < arr.length(); i++) {
-							JSONArray arr2 = arr.getJSONObject(i).ge;
-							
+							JSONArray arr2 = arr.getJSONObject(i).getJSONArray("lines");
+							//System.out.println(arr2.toString());
+							for(int k = 0; k < arr2.length(); k++) {
+								JSONArray arr3 = arr2.getJSONObject(k).getJSONArray("words");
+								//System.out.println(arr3.toString());
+								for(int j = 0; j < arr3.length(); j++) {
+									//System.out.println(arr3.getJSONObject(j).getString("text"));
+									description += " " + arr3.getJSONObject(j).getString("text");
+								}
+							}
 						}
-						
-						System.out.println(arr.toString());
-						
-//						System.out.println(arr.toString());
-//						
-//						for (int i = 0; i < arr.length(); i++) {
-//							JSONArray arr2 = arr.getJSONObject(i).getJSONArray("text");
-//							for(int k = 0; k < arr2.length(); k++) {
-//								System.out.println(description);
-//								description += arr2.getString(k);
-//							}
-//							
-//						}
-//						System.out.println(description);
+						writeSQLDescription(description,itemID, imageID);
 					}
 
 					public void cancelled() {
@@ -316,6 +314,34 @@ public class logItem {
 					}
 				});
 	}
+	
+	
+	public static void writeSQLDescription(String description, String itemID, String imageID) {
+		String hostName = "foundgt.database.windows.net";
+		String dbName = "foundgt";
+		String user = "sqladmin@foundgt";
+		// String password = System.getenv("SQL_PASS");
+		String password = "F(+AgcD%3a^rzN72";
+		String url = String.format(
+				"jdbc:sqlserver://%s:1433;database=%s;user=%s;password=%s;encrypt=true;hostNameInCertificate=*.database.windows.net;loginTimeout=30;",
+				hostName, dbName, user, password);
+		// System.out.println(url);
+		Connection connection = null;
+
+		try {
+			connection = DriverManager.getConnection(url);
+			String schema = connection.getSchema();
+			// Create and execute a SELECT SQL statement.
+			String selectSql = "UPDATE Items SET description = '" + description + "' WHERE itemID = '" + itemID +"' AND imageID ='" + imageID +"';";
+			System.out.println(selectSql);
+			Statement statement = connection.createStatement();
+			statement.executeUpdate(selectSql);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
 
 	private static Rectangle getButtonBounds(Dimension size) {
 		final int x = (int) (size.width * 0.1);
