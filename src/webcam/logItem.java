@@ -95,6 +95,7 @@ public class logItem {
 					String imageURL = uploadFile(temp.getBytes(), itemID.toString() + "-" + idCounter2.toString());
 					writeSQL(itemID.toString(), idCounter2.toString(), imageURL);
 					analyzeImage(temp.getBytes(), itemID.toString(), idCounter2.toString());
+					analyzeColor(temp.getBytes(), itemID.toString(), idCounter2.toString());
 					idCounter2.incrementAndGet();
 				} else {
 					panel.start();
@@ -266,13 +267,12 @@ public class logItem {
 				});
 	}
 
-	public static String[] analyzeColor(byte[] bytes) {
+	public static void analyzeColor(byte[] bytes, String itemID, String imageID) {
 		Map<String, String> headers = new HashMap<>();
-		headers.put("Content-Type", "application/json");
+		headers.put("Content-Type", "application/octet-stream");
 		headers.put("Ocp-Apim-Subscription-Key", "366063bf59be41afb6e9c29f8c0cc7fa");
 
-		String url = "https://eastus.api.cognitive.microsoft.com/vision/v2.0/analyze?visualFeatures=Color&language=en";
-		final String[] res = new String[1];
+		String url = "https://eastus.api.cognitive.microsoft.com/vision/v2.0/ocr?language=unk&detectOrientation=true";
 
 		Future<HttpResponse<JsonNode>> future = Unirest.post(url).headers(headers).body(bytes)
 				.asJsonAsync(new Callback<JsonNode>() {
@@ -283,16 +283,38 @@ public class logItem {
 
 					public void completed(HttpResponse<JsonNode> response) {
 						// Do something if the request is successful
-						System.out.println(response.getBody());
+						System.out.println("Body of analyze color");
+						//System.out.println(response.getBody());
 						// JSONObject myObj = response.getBody().getObject();
-
+						String description = "";
+						
+						JSONObject myObj = response.getBody().getObject();
+						System.out.println(myObj.toString());
+						JSONArray arr = myObj.getJSONArray("regions");
+						for(int i = 0; i < arr.length(); i++) {
+							JSONArray arr2 = arr.getJSONObject(i).ge;
+							
+						}
+						
+						System.out.println(arr.toString());
+						
+//						System.out.println(arr.toString());
+//						
+//						for (int i = 0; i < arr.length(); i++) {
+//							JSONArray arr2 = arr.getJSONObject(i).getJSONArray("text");
+//							for(int k = 0; k < arr2.length(); k++) {
+//								System.out.println(description);
+//								description += arr2.getString(k);
+//							}
+//							
+//						}
+//						System.out.println(description);
 					}
 
 					public void cancelled() {
 						// Do something if the request is cancelled
 					}
 				});
-		return res;
 	}
 
 	private static Rectangle getButtonBounds(Dimension size) {
