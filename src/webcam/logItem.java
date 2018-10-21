@@ -34,15 +34,19 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.microsoft.azure.storage.*;
 import com.microsoft.azure.storage.blob.*;
 
+import java.sql.Connection;
+import java.sql.Statement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.DriverManager;
+
 @SuppressWarnings("serial")
 public class logItem {
-	//int itemID = 1000;
-	
+	// int itemID = 1000;
+
 //	public logItem() {
 //		itemID++;
 //	}
-	
-	
 
 	public static void main(String[] args) throws InterruptedException {
 		String itemID = UUID.randomUUID().toString();
@@ -52,30 +56,33 @@ public class logItem {
 		webcam.setViewSize(size);
 
 		final WebcamPanel panel = new WebcamPanel(webcam, false);
-		panel.setFPSDisplayed(true);
-		panel.setDisplayDebugInfo(true);
-		panel.setImageSizeDisplayed(true);
-		panel.setMirrored(true);
+//		panel.setFPSDisplayed(true);
+//		panel.setDisplayDebugInfo(true);
+//		panel.setImageSizeDisplayed(true);
+//		panel.setMirrored(true);
 
 		final String play = "PLAY";
 		final String stop = "STOP";
 
 		final JButton button = new JButton();
 		button.setAction(new AbstractAction(play) {
-			//int rowKey = 100;
+			// int rowKey = 100;
 			private AtomicLong idCounter2 = new AtomicLong();
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (panel.isStarted()) {
-					//panel.stop();
-					//button.setText(play);
+					// panel.stop();
+					// button.setText(play);
 					byte[] bytes = WebcamUtils.getImageBytes(webcam, "jpg");
 					Item temp = new Item(itemID, String.valueOf(idCounter2), bytes);
 					analyzeImage(temp.getBytes());
 					System.out.println(temp.getPartitionKey());
 					System.out.println(temp.getRowKey());
+					writeSQL();
 					idCounter2.incrementAndGet();
-					//uploadFile(temp.getBytes());
+
+					// uploadFile(temp.getBytes());
 				} else {
 					panel.start();
 					button.setText(stop);
@@ -95,10 +102,44 @@ public class logItem {
 		window.pack();
 		window.setVisible(true);
 	}
-	
-	
+
 	public static void writeSQL() {
-		
+		String hostName = "testestestest.database.windows.net";
+		String dbName = "test2222";
+		String user = "ttran88@uncc.edu";
+		// String password = System.getenv("SQL_PASS");
+		String password = "F(+AgcD%3a^rzN72";
+		System.out.println(password);
+		String url = String.format(
+				"jdbc:sqlserver://%s:1433;database=%s;user=%s;password=%s;encrypt=true;hostNameInCertificate=*.database.windows.net;loginTimeout=30;",
+				hostName, dbName, user, password);
+		System.out.println(url);
+		Connection connection = null;
+
+		try {
+			connection = DriverManager.getConnection(url);
+			String schema = connection.getSchema();
+			System.out.println("Successful connection - Schema: " + schema);
+
+			System.out.println("Query data example:");
+			System.out.println("=========================================");
+
+			// Create and execute a SELECT SQL statement.
+//			String selectSql = "SELECT * from items";
+//
+//			try (Statement statement = connection.createStatement();
+//					ResultSet resultSet = statement.executeQuery(selectSql)) {
+//
+//				// Print results from select statement
+//				while (resultSet.next()) {
+//					System.out.println(resultSet.getString(1));
+//				}
+//				connection.close();
+//			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public static void uploadFile(byte[] bytes) {
@@ -133,7 +174,7 @@ public class logItem {
 		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
 		}
-		
+
 		try {
 			CloudBlockBlob blob = container.getBlockBlobReference("Thao.jpg");
 			blob.uploadFromByteArray(bytes, 0, bytes.length);
@@ -189,21 +230,21 @@ public class logItem {
 class Item {
 	private String partitionKey, rowKey;
 	private byte[] bytes;
-	
+
 	public Item(String partitionKey, String rowKey, byte[] bytes) {
 		this.partitionKey = partitionKey;
 		this.rowKey = rowKey;
 		this.bytes = bytes;
 	}
-	
+
 	public byte[] getBytes() {
 		return bytes;
 	}
-	
+
 	public String getPartitionKey() {
 		return partitionKey;
 	}
-	
+
 	public String getRowKey() {
 		return rowKey;
 	}
