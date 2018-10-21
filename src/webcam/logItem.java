@@ -79,10 +79,9 @@ public class logItem {
 					analyzeImage(temp.getBytes());
 					System.out.println(temp.getPartitionKey());
 					System.out.println(temp.getRowKey());
-					writeSQL();
+					String imageURL = uploadFile(temp.getBytes(), itemID.toString() + "-" + idCounter2.toString());
+					writeSQL(itemID.toString(), idCounter2.toString(), "black shoes", "shoes", imageURL);
 					idCounter2.incrementAndGet();
-
-					// uploadFile(temp.getBytes());
 				} else {
 					panel.start();
 					button.setText(stop);
@@ -103,10 +102,10 @@ public class logItem {
 		window.setVisible(true);
 	}
 
-	public static void writeSQL() {
-		String hostName = "testestestest.database.windows.net";
-		String dbName = "test2222";
-		String user = "ttran88@uncc.edu";
+	public static void writeSQL(String itemID, String imageID, String description, String category, String imageURL) {
+		String hostName = "foundgt.database.windows.net";
+		String dbName = "foundgt";
+		String user = "sqladmin@foundgt";
 		// String password = System.getenv("SQL_PASS");
 		String password = "F(+AgcD%3a^rzN72";
 		System.out.println(password);
@@ -115,6 +114,8 @@ public class logItem {
 				hostName, dbName, user, password);
 		System.out.println(url);
 		Connection connection = null;
+
+		// jdbc:sqlserver://hackgt5.database.windows.net:1433;database=items;user=thaotrongtran@hackgt5;password={your_password_here};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
 
 		try {
 			connection = DriverManager.getConnection(url);
@@ -125,24 +126,17 @@ public class logItem {
 			System.out.println("=========================================");
 
 			// Create and execute a SELECT SQL statement.
-//			String selectSql = "SELECT * from items";
-//
-//			try (Statement statement = connection.createStatement();
-//					ResultSet resultSet = statement.executeQuery(selectSql)) {
-//
-//				// Print results from select statement
-//				while (resultSet.next()) {
-//					System.out.println(resultSet.getString(1));
-//				}
-//				connection.close();
-//			}
+			String selectSql = "INSERT INTO Items VALUES ('" + itemID + "', '" + imageID + "', '" + description + "', '"
+					+ category + "', '" + imageURL + "');";
+			System.out.println(selectSql);
+			Statement statement = connection.createStatement();
+			statement.executeUpdate(selectSql);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 
-	public static void uploadFile(byte[] bytes) {
+	public static String uploadFile(byte[] bytes, String imageID) {
 
 		CloudStorageAccount storageAccount;
 		CloudBlobClient blobClient = null;
@@ -176,9 +170,10 @@ public class logItem {
 		}
 
 		try {
-			CloudBlockBlob blob = container.getBlockBlobReference("Thao.jpg");
+			CloudBlockBlob blob = container.getBlockBlobReference(imageID + ".jpg");
 			blob.uploadFromByteArray(bytes, 0, bytes.length);
 			System.out.println(blob.getUri());
+			return blob.getUri().toString();
 		} catch (URISyntaxException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -189,6 +184,7 @@ public class logItem {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		return null;
 	}
 
 	public static void analyzeImage(byte[] bytes) {
